@@ -1,6 +1,7 @@
 package radix
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 )
@@ -34,9 +35,31 @@ func (ctx *Context) SetHeader(key, value string) {
 }
 
 func (ctx *Context) String(format string, values ...interface{}) {
+	ctx.SetHeader("Content-Type", "text/plain")
 	if ctx.statusCode == 0 {
 		ctx.SetStatusCode(http.StatusOK)
 	}
-	ctx.SetHeader("Context-Type", "text/plain")
 	ctx.Writer.Write([]byte(fmt.Sprintf(format, values...)))
+}
+
+func (ctx *Context) JSON(data Data) {
+	ctx.SetHeader("Content-Type", "application/json")
+	if statusCode, exist := data["code"]; exist {
+		ctx.SetStatusCode(statusCode.(int))
+	}
+	encoder := json.NewEncoder(ctx.Writer)
+	if err := encoder.Encode(data); err != nil {
+		ctx.SetStatusCode(500)
+		ctx.String(err.Error())
+	}
+}
+
+func (ctx *Context) GetQuery(key string) string {
+	return ctx.Req.URL.Query().Get(key)
+}
+
+func (ctx *Context) PostBody() map[string]interface{} {
+	var params map[string]interface{}
+	json.NewDecoder(ctx.Req.Body).Decode(&params)
+	return params
 }

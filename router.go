@@ -19,7 +19,7 @@ func (router *router) addRouter(method, pattern string, handler Handler) {
 	if _, exist := router.handlers[key]; exist {
 		warn("Failed to add router: router %s already exists", key)
 	} else {
-		info("Added router: %s", key)
+		info("Added router: %6s - %s", method, pattern)
 		router.handlers[key] = handler
 	}
 }

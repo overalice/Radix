@@ -10,6 +10,6 @@ func warn(format string, values ...interface{}) {
 	fmt.Printf(format+"\n", values...)
 }
 
-func error(format string, values ...interface{}) {
+func fault(format string, values ...interface{}) {
 	fmt.Printf(format+"\n", values...)
 }
