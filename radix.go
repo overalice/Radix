@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"reflect"
 	"strconv"
+	"strings"
 )
 
 type Handler func(ctx *Context)
@@ -19,36 +20,65 @@ func Response(data interface{}) Data {
 }
 
 type engine struct {
+	*RouterGroup
 	router *router
+	groups []*RouterGroup
+}
+
+type RouterGroup struct {
+	prefix      string
+	middlewares []Handler
+	engine      *engine
 }
 
 func New() *engine {
-	return &engine{
-		router: newRouter(),
+	engine := &engine{router: newRouter()}
+	engine.RouterGroup = &RouterGroup{engine: engine}
+	engine.groups = []*RouterGroup{engine.RouterGroup}
+	return engine
+}
+
+func Default() *engine {
+	engine := New()
+	engine.Use(Reconvery)
+	return engine
+}
+
+func (group *RouterGroup) Group(prefix string) *RouterGroup {
+	engine := group.engine
+	newGroup := &RouterGroup{
+		prefix: prefix,
+		engine: engine,
 	}
+	engine.groups = append(engine.groups, newGroup)
+	return newGroup
 }
 
-func (engine *engine) addRouter(method, pattern string, handler Handler) {
-	engine.router.addRouter(method, pattern, handler)
+func (group *RouterGroup) Use(middlewares ...Handler) {
+	group.middlewares = append(group.middlewares, middlewares...)
 }
 
-func (engine *engine) GET(pattern string, handler Handler) {
-	engine.addRouter("GET", pattern, handler)
+func (group *RouterGroup) addRouter(method, pattern string, handler Handler) {
+	group.engine.router.addRouter(method, group.prefix+pattern, handler)
 }
 
-func (engine *engine) POST(pattern string, handler Handler) {
-	engine.addRouter("POST", pattern, handler)
+func (group *RouterGroup) GET(pattern string, handler Handler) {
+	group.addRouter("GET", pattern, handler)
 }
 
-func (engine *engine) PUT(pattern string, handler Handler) {
-	engine.addRouter("PUT", pattern, handler)
+func (group *RouterGroup) POST(pattern string, handler Handler) {
+	group.addRouter("POST", pattern, handler)
 }
 
-func (engine *engine) DELETE(pattern string, handler Handler) {
-	engine.addRouter("DELETE", pattern, handler)
+func (group *RouterGroup) PUT(pattern string, handler Handler) {
+	group.addRouter("PUT", pattern, handler)
 }
 
-func (engine *engine) REST(pattern string, keys ...interface{}) {
+func (group *RouterGroup) DELETE(pattern string, handler Handler) {
+	group.addRouter("DELETE", pattern, handler)
+}
+
+func (group *RouterGroup) REST(pattern string, keys ...interface{}) {
 	var key string
 	var identidy string
 	if len(keys) == 0 {
@@ -61,7 +91,7 @@ func (engine *engine) REST(pattern string, keys ...interface{}) {
 		}
 	}
 
-	engine.POST(pattern, func(ctx *Context) {
+	group.POST(pattern, func(ctx *Context) {
 		body := ctx.PostBody()
 		switch body[key].(type) {
 		case float64:
@@ -83,7 +113,7 @@ func (engine *engine) REST(pattern string, keys ...interface{}) {
 		}
 		ctx.JSON(response)
 	})
-	engine.DELETE(pattern, func(ctx *Context) {
+	group.DELETE(pattern, func(ctx *Context) {
 		identidy := ctx.GetQuery(key)
 		err := RemoveJSON(pattern + "-" + identidy + ".json")
 		response := Response("")
@@ -95,7 +125,7 @@ func (engine *engine) REST(pattern string, keys ...interface{}) {
 		}
 		ctx.JSON(response)
 	})
-	engine.GET(pattern, func(ctx *Context) {
+	group.GET(pattern, func(ctx *Context) {
 		data := make(Data)
 		identidy = ctx.GetQuery(key)
 		err := ReadJSON(pattern+"-"+identidy+".json", data)
@@ -106,7 +136,7 @@ func (engine *engine) REST(pattern string, keys ...interface{}) {
 		}
 		ctx.JSON(response)
 	})
-	engine.PUT(pattern, func(ctx *Context) {
+	group.PUT(pattern, func(ctx *Context) {
 		body := ctx.PostBody()
 		switch body[key].(type) {
 		case float64:
@@ -159,5 +189,10 @@ func (engine *engine) Start(addrs ...interface{}) {
 
 func (engine *engine) ServeHTTP(writer http.ResponseWriter, req *http.Request) {
 	ctx := newContext(writer, req)
+	for _, group := range engine.groups {
+		if strings.HasPrefix(req.URL.Path, group.prefix) {
+			ctx.handlers = append(ctx.handlers, group.middlewares...)
+		}
+	}
 	engine.router.handle(ctx)
 }

@@ -27,9 +27,12 @@ func (router *router) addRouter(method, pattern string, handler Handler) {
 func (router *router) handle(ctx *Context) {
 	key := ctx.Method + "-" + ctx.Path
 	if handler, exist := router.handlers[key]; exist {
-		handler(ctx)
+		ctx.handlers = append(ctx.handlers, handler)
 	} else {
-		ctx.SetStatusCode(http.StatusNotFound)
-		ctx.String("404 NOT FOUND\t%s", key)
+		ctx.handlers = append(ctx.handlers, func(ctx *Context) {
+			ctx.SetStatusCode(http.StatusNotFound)
+			ctx.String("404 NOT FOUND\t%s", key)
+		})
 	}
+	ctx.Next()
 }
