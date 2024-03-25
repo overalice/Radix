@@ -31,9 +31,9 @@ func init() {
 	}
 }
 
-func handleFilename(filename *string) string {
+func handleFilename(filename *string) {
 	files := strings.Split(*filename, "/")
-	return files[len(files)-1]
+	*filename = files[len(files)-1]
 }
 
 func file(filename string) string {
