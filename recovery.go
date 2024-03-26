@@ -6,7 +6,7 @@ func Reconvery(ctx *Context) {
 	defer func() {
 		if err := recover(); err != nil {
 			ctx.SetStatusCode(http.StatusInternalServerError)
-			ctx.String("Internal Server Error")
+			ctx.String("Internal Server Error: %s", err)
 		}
 	}()
 	ctx.Next()
