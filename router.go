@@ -2,6 +2,7 @@ package radix
 
 import (
 	"net/http"
+	"strings"
 )
 
 type router struct {
@@ -48,6 +49,19 @@ func (router *router) handle(ctx *Context) {
 	}
 
 	if node := router.roots[ctx.Method].search(ctx.Path); node != nil {
+		params := make(map[string]string)
+		searchParts := strings.Split(ctx.Path, "/")
+		routerParts := strings.Split(node.fullPath, "/")
+		for i := 0; i < len(routerParts); i++ {
+			if searchParts[i] != routerParts[i] {
+				if routerParts[i][0] == '*' {
+					params[routerParts[i][1:]] = strings.Join(searchParts[i:], "/")
+					break
+				}
+				params[routerParts[i][1:]] = searchParts[i]
+			}
+		}
+		ctx.params = params
 		ctx.handlers = append(ctx.handlers, router.handlers[ctx.Method+"-"+node.fullPath])
 	} else {
 		ctx.handlers = append(ctx.handlers, func(ctx *Context) {
@@ -109,30 +123,60 @@ loop:
 func (node *treeNode) search(pattern string) *treeNode {
 loop:
 	for {
-		var i int
-		for i = 0; i < len(node.path); i++ {
-			if len(pattern) == i {
-				return nil
-			}
-			if node.path[i] == '*' {
+		var i, j int
+		for ; i < len(node.path) && j < len(pattern); i, j = i+1, j+1 {
+			switch node.path[i] {
+			case '*':
 				return node
+			case ':':
+				flag := 0
+				for ; i < len(node.path); i++ {
+					if node.path[i] == '/' {
+						i++
+						flag++
+						break
+					}
+				}
+				for ; j < len(pattern); j++ {
+					if pattern[j] == '/' {
+						j++
+						flag++
+						break
+					}
+				}
+				if flag == 0 && node.isEnd {
+					return node
+				}
+				for k := 0; flag == 2 && k < len(node.indices); k++ {
+					if j < len(pattern) && node.indices[k] == pattern[j] {
+						pattern = pattern[j:]
+						node = node.children[k]
+						continue loop
+					}
+				}
 			}
-			if node.path[i] != pattern[i] {
+			if i >= len(node.path) || j >= len(pattern) || i >= len(pattern) || node.path[i] != pattern[j] {
 				return nil
 			}
 		}
 		pattern = pattern[i:]
-		if pattern == "" && node.isEnd {
+		if pattern == "" && node.isEnd && node.path[i:] == pattern {
 			return node
+		} else if pattern == "" {
+			return nil
 		}
 		for i = 0; i < len(node.indices); i++ {
 			if pattern[0] == node.indices[i] {
-				node = node.children[i]
-				continue loop
+				if node := node.children[i].search(pattern); node != nil {
+					return node
+				}
 			}
 		}
 		for i = 0; i < len(node.indices); i++ {
-			if node.indices[i] == '*' {
+			if node.indices[i] == ':' {
+				node = node.children[i]
+				continue loop
+			} else if node.indices[i] == '*' {
 				return node
 			}
 		}
