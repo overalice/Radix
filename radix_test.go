@@ -21,10 +21,9 @@ func TestServe(t *testing.T) {
 	r.GET("/:name/doing/:thing", func(ctx *Context) {
 		ctx.String(ctx.Param("name") + ", you're doing " + ctx.Param("thing"))
 	})
-	r.GET("/assets/*filename", func(ctx *Context) {
+	r.GET("/files/*filename", func(ctx *Context) {
 		ctx.String(ctx.Param("filename"))
 	})
-
 	v1 := r.Group("/v1")
 	{
 		v1.GET("/hi", func(ctx *Context) {
@@ -35,6 +34,14 @@ func TestServe(t *testing.T) {
 			ctx.String("%s", arr[99])
 		})
 	}
+	r.LoadHTMLGlob("templates/*")
+	r.Static("/assets", "./static")
+	r.GET("/index", func(ctx *Context) {
+		ctx.HTML("index.tmpl", Data{
+			"title":   "Radix",
+			"message": "Welcome to radix",
+		})
+	})
 	r.REST("/person")
 	r.Start()
 }

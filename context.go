@@ -19,6 +19,8 @@ type Context struct {
 
 	index    int
 	handlers []Handler
+
+	engine *engine
 }
 
 func newContext(writer http.ResponseWriter, req *http.Request) *Context {
@@ -70,6 +72,17 @@ func (ctx *Context) JSON(data Data) {
 	encoder := json.NewEncoder(ctx.Writer)
 	if err := encoder.Encode(data); err != nil {
 		ctx.SetStatusCode(500)
+		ctx.String(err.Error())
+	}
+}
+
+func (ctx *Context) HTML(name string, data interface{}) {
+	ctx.SetHeader("Context-Type", "text/html")
+	if ctx.statusCode == 0 {
+		ctx.SetStatusCode(http.StatusOK)
+	}
+	if err := ctx.engine.htmlTemplates.ExecuteTemplate(ctx.Writer, name, data); err != nil {
+		ctx.SetStatusCode(http.StatusInternalServerError)
 		ctx.String(err.Error())
 	}
 }
