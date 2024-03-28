@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"text/template"
 )
 
 type Handler func(ctx *Context)
@@ -21,8 +22,10 @@ func Response(data interface{}) Data {
 
 type engine struct {
 	*RouterGroup
-	router *router
-	groups []*RouterGroup
+	router        *router
+	groups        []*RouterGroup
+	htmlTemplates *template.Template
+	funcMap       template.FuncMap
 }
 
 type RouterGroup struct {
@@ -52,6 +55,14 @@ func (group *RouterGroup) Group(prefix string) *RouterGroup {
 	}
 	engine.groups = append(engine.groups, newGroup)
 	return newGroup
+}
+
+func (engine *engine) SetFuncMap(funcMap template.FuncMap) {
+	engine.funcMap = funcMap
+}
+
+func (engine *engine) LoadHTMLGlob(pattern string) {
+	engine.htmlTemplates = template.Must(template.New("").Funcs(engine.funcMap).ParseGlob(pattern))
 }
 
 func (group *RouterGroup) Use(middlewares ...Handler) {
@@ -194,5 +205,6 @@ func (engine *engine) ServeHTTP(writer http.ResponseWriter, req *http.Request) {
 			ctx.handlers = append(ctx.handlers, group.middlewares...)
 		}
 	}
+	ctx.engine = engine
 	engine.router.handle(ctx)
 }

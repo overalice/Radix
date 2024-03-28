@@ -2,6 +2,7 @@ package radix
 
 import (
 	"net/http"
+	"path"
 	"strings"
 )
 
@@ -70,6 +71,25 @@ func (router *router) handle(ctx *Context) {
 		})
 	}
 	ctx.Next()
+}
+
+func (group *RouterGroup) createStaticHandler(relativePath string, fs http.FileSystem) Handler {
+	absolutePath := path.Join(group.prefix, relativePath)
+	fileServer := http.StripPrefix(absolutePath, http.FileServer(fs))
+	return func(ctx *Context) {
+		file := ctx.Param("filepath")
+		if _, err := fs.Open(file); err != nil {
+			ctx.SetStatusCode(http.StatusNotFound)
+			return
+		}
+		fileServer.ServeHTTP(ctx.Writer, ctx.Req)
+	}
+}
+
+func (group *RouterGroup) Static(relativePath string, root string) {
+	handler := group.createStaticHandler(relativePath, http.Dir(root))
+	urlPattern := path.Join(relativePath, "/*filepath")
+	group.GET(urlPattern, handler)
 }
 
 func (node *treeNode) insert(pattern string) {
