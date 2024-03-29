@@ -185,7 +185,7 @@ func (group *RouterGroup) REST(pattern string, keys ...interface{}) {
 func (engine *engine) Start(addrs ...interface{}) {
 	var addr string
 	if len(addrs) == 0 {
-		addr = "8080"
+		addr = config["port"]
 	} else {
 		var ok bool
 		addr, ok = addrs[0].(string)
