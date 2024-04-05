@@ -32,9 +32,9 @@ func (router *router) addRouter(method, pattern string, handler Handler) {
 	}
 	key := method + "-" + pattern
 	if node := router.roots[method].search(pattern); node != nil {
-		warn("Failed to add router: router %s already exists", key)
+		Warn("Failed to add router: router %s already exists", key)
 	} else {
-		info("Added router: %6s - %s", method, pattern)
+		Info("Added router: %6s - %s", method, pattern)
 		router.roots[method].insert(pattern)
 		router.handlers[key] = handler
 	}

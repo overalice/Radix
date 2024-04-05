@@ -8,7 +8,7 @@ import (
 
 var (
 	stlog   *log.Logger
-	logPath = "/log"
+	logPath = "log"
 )
 
 type fileLog string
@@ -17,7 +17,7 @@ func init() {
 	var err error
 	currentDir, err = os.Getwd()
 	if err != nil {
-		fault(err.Error())
+		Error(err.Error())
 		return
 	}
 
@@ -25,10 +25,10 @@ func init() {
 	if os.IsNotExist(err) {
 		err := os.MkdirAll(filepath.Join(currentDir, logPath), 0755)
 		if err != nil {
-			fault(err.Error())
+			Error(err.Error())
 			return
 		}
-		info("Created a folder: %s", logPath)
+		Info("Created a folder: %s", logPath)
 	}
 }
 
@@ -39,6 +39,7 @@ func StartFileLog(destination string) {
 func (fl fileLog) Write(data []byte) (int, error) {
 	f, err := os.OpenFile(string(fl), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
 	if err != nil {
+		Warn(err.Error())
 		return 0, err
 	}
 	defer f.Close()
@@ -47,7 +48,7 @@ func (fl fileLog) Write(data []byte) (int, error) {
 
 func WriteLog(message string) {
 	if stlog == nil {
-		fault("Filelog is not enabled")
+		Error("Filelog is not enabled")
 	} else {
 		stlog.Printf("%v\n", message)
 	}

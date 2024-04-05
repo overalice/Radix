@@ -17,17 +17,17 @@ func init() {
 	var err error
 	currentDir, err = os.Getwd()
 	if err != nil {
-		fault(err.Error())
+		Error(err.Error())
 		return
 	}
 	_, err = os.Stat(filepath.Join(currentDir, basePath))
 	if os.IsNotExist(err) {
 		err := os.MkdirAll(filepath.Join(currentDir, basePath), 0755)
 		if err != nil {
-			fault(err.Error())
+			Error(err.Error())
 			return
 		}
-		info("Created a folder: %s", basePath)
+		Info("Created a folder: %s", basePath)
 	}
 }
 
