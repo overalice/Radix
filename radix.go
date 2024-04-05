@@ -97,7 +97,7 @@ func (group *RouterGroup) REST(pattern string, keys ...interface{}) {
 	} else {
 		key, ok := keys[0].(string)
 		if !ok {
-			fault("Expected type of key: string, find %s", reflect.TypeOf(key).String())
+			Error("Expected type of key: string, find %s", reflect.TypeOf(key).String())
 			return
 		}
 	}
@@ -190,11 +190,11 @@ func (engine *engine) Start(addrs ...interface{}) {
 		var ok bool
 		addr, ok = addrs[0].(string)
 		if !ok {
-			fault("Expected type of addr: string, find %s", reflect.TypeOf(addrs[0]).String())
+			Error("Expected type of addr: string, find %s", reflect.TypeOf(addrs[0]).String())
 			return
 		}
 	}
-	info("Welcome Radix, service running on 127.0.0.1:%s", addr)
+	Info("Welcome Radix, service running on 127.0.0.1:%s", addr)
 	http.ListenAndServe(":"+addr, engine)
 }
 

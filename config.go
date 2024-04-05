@@ -13,7 +13,7 @@ func init() {
 
 	file, err := os.Open("config.txt")
 	if err != nil {
-		fault("Failed to open config file")
+		Error("Failed to open config file")
 	}
 	defer file.Close()
 
@@ -22,7 +22,7 @@ func init() {
 		line := scanner.Text()
 		parts := strings.Split(line, "=")
 		if len(parts) != 2 {
-			warn("Failed to parse %s", line)
+			Warn("Failed to parse %s", line)
 			continue
 		}
 		key := strings.TrimSpace(parts[0])
@@ -30,6 +30,6 @@ func init() {
 		config[key] = value
 	}
 	if err := scanner.Err(); err != nil {
-		fault(err.Error())
+		Error(err.Error())
 	}
 }
