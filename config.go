@@ -11,7 +11,7 @@ var config map[string]string
 func init() {
 	config = make(map[string]string)
 
-	file, err := os.Open("config.txt")
+	file, err := os.Open("config.cfg")
 	if err != nil {
 		Error("Failed to open config file")
 	}
