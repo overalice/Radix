@@ -1,18 +1,18 @@
 <div align="center">
   <a href=#>
-    <img src="http://122.51.217.174:8080/radix.png" alt="Logo" width="80" height="80">
+    <img src="http://radix.overstar.site/radix.png" alt="Logo" width="80" height="80">
   </a>
 </div>
 
 <h3 align="center">Radix</h3>
 
 <p align="center">
-让你快速开始构建项目的后端接口！
+快速开始构建你的后端项目！
 <br />
-<a href="https://github.com/overalice/Radix"><strong>浏览文档 »</strong></a>
+<a href="http://radix.overstar.site/doc"><strong>浏览文档 »</strong></a>
 <br />
 <br />
-<a href="https://github.com/overalice/Radix">查看 Demo</a>
+<a href="http://radix.overstar.site">官网</a>
 ·
 <a href="https://github.com/overalice/Radix/issues">反馈 Bug</a>
 ·
@@ -62,7 +62,7 @@
 ### 依赖
 
 * Go
-  参考：https://golang.google.cn/doc/install
+  安装参考：https://golang.google.cn/doc/install
 
 ### 安装
 
@@ -109,7 +109,7 @@ func main() {
 go run main.go
 ```
 
-转到 [文档](https://github.com/overalice/Radix) 查看更多示例
+转到 [文档](http://radix.overstar.site/doc) 查看更多示例
 
 
 
