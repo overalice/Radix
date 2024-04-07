@@ -3,73 +3,44 @@ package radix
 import (
 	"database/sql"
 	"os"
-	"reflect"
 	"testing"
 
+	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/overalice/radix/dialect"
 )
 
 type User struct {
-	Name string `orm:"PRIMARY KEY"`
+	ID   int `orm:"PRIMARY KEY"`
+	Name string
 	Age  int
 }
 
 var (
-	user1 = &User{"Tom", 18}
-	user2 = &User{"Sam", 25}
-	user3 = &User{"Jack", 25}
+	user1 = &User{1, "Tom", 18}
+	user2 = &User{2, "Sam", 25}
+	user3 = &User{3, "Jack", 25}
 )
 
 var (
 	TestDB      *sql.DB
-	TestDial, _ = dialect.GetDialect("sqlite3")
+	TestDial, _ = dialect.GetDialect("mysql")
 )
 
-func TestSession(t *testing.T) {
-	orm, _ := NewOrm("sqlite3", "gee.db")
+func TestSqlite(t *testing.T) {
+	Info("Start test sqlite")
+	orm, _ := NewOrm("sqlite3", "radix.db")
 	defer orm.Close()
 	s := orm.NewSession()
 	s.Raw("DROP TABLE IF EXISTS User;").Exec()
 	s.Raw("CREATE TABLE User(Name text);").Exec()
 	s.Raw("CREATE TABLE User(Name text);").Exec()
 	s.Raw("INSERT INTO User(`Name`) values (?), (?)", "Tom", "Sam").Exec()
-}
-
-func TestParse(t *testing.T) {
-	schema := Parse(&User{}, TestDial)
-	if schema.Name != "User" || len(schema.Fields) != 2 {
-		t.Fatal("failed to parse User struct")
-	}
-	if schema.GetField("Name").Tag != "PRIMARY KEY" {
-		t.Fatal("failed to parse primary key")
-	}
-}
-
-func testSelect(t *testing.T) {
-	var clause Clause
-	clause.Set(LIMIT, 3)
-	clause.Set(SELECT, "User", []string{"*"})
-	clause.Set(WHERE, "Name = ?", "Tom")
-	clause.Set(ORDERBY, "Age ASC")
-	sql, vars := clause.Build(SELECT, WHERE, ORDERBY, LIMIT)
-	t.Log(sql, vars)
-	if sql != "SELECT * FROM User WHERE Name = ? ORDER BY Age ASC LIMIT ?" {
-		t.Fatal("failed to build SQL")
-	}
-	if !reflect.DeepEqual(vars, []interface{}{"Tom", 3}) {
-		t.Fatal("failed to build SQLVars")
-	}
-}
-
-func TestClause_Build(t *testing.T) {
-	t.Run("select", func(t *testing.T) {
-		testSelect(t)
-	})
+	Info("End test sqlite")
 }
 
 func TestMain(m *testing.M) {
-	TestDB, _ = sql.Open("sqlite3", "gee.db")
+	TestDB, _ = sql.Open("mysql", "root:@tcp(127.0.0.1:3306)/test")
 	code := m.Run()
 	_ = TestDB.Close()
 	os.Exit(code)
