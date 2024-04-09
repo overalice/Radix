@@ -34,7 +34,6 @@ func TestSqlite(t *testing.T) {
 	s := orm.NewSession()
 	s.Raw("DROP TABLE IF EXISTS User;").Exec()
 	s.Raw("CREATE TABLE User(Name text);").Exec()
-	s.Raw("CREATE TABLE User(Name text);").Exec()
 	s.Raw("INSERT INTO User(`Name`) values (?), (?)", "Tom", "Sam").Exec()
 	Info("End test sqlite")
 }

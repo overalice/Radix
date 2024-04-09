@@ -7,7 +7,7 @@ import (
 func TestServe(t *testing.T) {
 	StartFileLog("radix.log")
 	WriteLog("Server start")
-	r := Default()
+	r := New()
 	r.GET("/", func(ctx *Context) {
 		ctx.String("Welcome Radix!")
 	})
@@ -44,6 +44,6 @@ func TestServe(t *testing.T) {
 			"message": "Welcome to radix",
 		})
 	})
-	r.REST("/person")
+	r.REST("/person", "name")
 	r.Start()
 }

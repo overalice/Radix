@@ -95,7 +95,8 @@ func (group *RouterGroup) REST(pattern string, keys ...interface{}) {
 	if len(keys) == 0 {
 		key = "id"
 	} else {
-		key, ok := keys[0].(string)
+		var ok bool
+		key, ok = keys[0].(string)
 		if !ok {
 			Error("Expected type of key: string, find %s", reflect.TypeOf(key).String())
 			return
@@ -112,7 +113,7 @@ func (group *RouterGroup) REST(pattern string, keys ...interface{}) {
 		default:
 			response := Response("")
 			response["code"] = http.StatusInternalServerError
-			response["msg"] = "Expected type of identidy: int or string, find " + reflect.TypeOf(body[key]).String()
+			response["msg"] = "Expected type of identidy: int or string, find " + reflect.TypeOf(body[key].(string)).String()
 			ctx.JSON(response)
 			return
 		}
